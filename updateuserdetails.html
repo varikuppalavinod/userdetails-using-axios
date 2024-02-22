@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+</head>
+
+<body style="margin: 0">
+  <form onsubmit="handleFormSubmit(event)">
+    <label for="username">Username</label>
+    <input type="text" name="username" id="username" />
+    <label for="email">Email</label>
+    <input type="email" name="email" id="email" />
+    <label for="phone">Phone No</label>
+    <input type="tel" name="phone" id="phone" />
+    <button type="submit">Submit</button>
+  </form>
+  <ul></ul>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.1/axios.min.js"></script>
+<script>
+ 
+ window.onload = function() {
+    // When the page loads, fetch the data from the API and display it on the screen
+    fetchDataAndDisplay();
+  }
+  function fetchDataAndDisplay() {
+    axios.get("https://crudcrud.com/api/b32ed308e4554b42a5722b0caf86311e/appointmentData")
+      .then(response => {
+        const userData = response.data;
+        userData.forEach(user => {
+          displayUserOnScreen(user);
+        });
+      })
+      .catch(error => console.log(error));
+  }
+
+  function handleFormSubmit(event) {
+    event.preventDefault();
+    const userDetails = {
+      username: event.target.username.value,
+      email: event.target.email.value,
+      phone: event.target.phone.value,
+    };
+    axios.post(
+      "https://crudcrud.com/api/b32ed308e4554b42a5722b0caf86311e/appointmentData",
+      userDetails
+    )
+      .then((response) => {
+        displayUserOnScreen(response.data);
+        event.target.reset();
+      })
+      .catch((error) => console.log(error));
+  }
+
+  function displayUserOnScreen(userDetails) {
+    const userItem = document.createElement("li");
+    userItem.appendChild(
+      document.createTextNode(
+        `${userDetails.username} - ${userDetails.email} - ${userDetails.phone}`
+      )
+    );
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.appendChild(document.createTextNode("Delete"));
+    userItem.appendChild(deleteBtn);
+
+    const editBtn = document.createElement("button");
+    editBtn.appendChild(document.createTextNode("Edit"));
+    userItem.appendChild(editBtn);
+
+    const userList = document.querySelector("ul");
+    userList.appendChild(userItem);
+
+    deleteBtn.addEventListener("click", function(event) {
+      userList.removeChild(userItem);
+      deleteUserData(userDetails._id);
+    });
+
+    editBtn.addEventListener("click", function(event) {
+      // Populate the form fields with user details for editing
+      document.getElementById("username").value = userDetails.username;
+      document.getElementById("email").value = userDetails.email;
+      document.getElementById("phone").value = userDetails.phone;
+
+      userList.removeChild(userItem)
+      deleteUserData(userDetails._id);
+      
+       
+
+      // Change the form submission to update mode
+      const form = document.querySelector("form");
+      form.removeEventListener("submit", handleFormSubmit);
+      form.addEventListener("submit", function(event) {
+        handleFormUpdate(event, userDetails._id);
+      });
+    });
+  }
+
+  function handleFormUpdate(event, userId) {
+    event.preventDefault();
+    const userDetails = {
+      username: event.target.username.value,
+      email: event.target.email.value,
+      phone: event.target.phone.value,
+    };
+    axios.put(
+      `https://crudcrud.com/api/b32ed308e4554b42a5722b0caf86311e/appointmentData/${userId}`,
+      userDetails
+    )
+      .then((response) => {
+        //fetchDataAndDisplay();
+        event.target.reset();
+      })
+      .catch((error) => console.log(error));
+  }
+
+  function deleteUserData(userId) {
+    axios.delete(`https://crudcrud.com/api/b32ed308e4554b42a5722b0caf86311e/appointmentData/${userId}`)
+      .then(response => console.log("Data deleted successfully"))
+      .catch(error => console.log(error));
+  }
+</script>
+</html>
